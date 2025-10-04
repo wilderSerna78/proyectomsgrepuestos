@@ -25,6 +25,7 @@ app.get("/test-db", async (req, res) => {
 
 // ✅ Montar las rutas principales
 app.use("/", principalRoutes);
+// app.use("/", principalRoutes)
 
 // ❌ Manejo para rutas no encontradas
 app.use((req, res) => {
