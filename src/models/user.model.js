@@ -74,56 +74,87 @@ export const getUserByEmail = async (email) => {
 };
 
 export const updateUser = async (idUsuario, data) => {
-  const connection = await connectMySQL();
+  const connection = await connectMySQL(); // ✅ Abre la conexión
   try {
-    // 1. Obtener las claves y valores de los datos que sí llegaron
-    const fields = Object.keys(data); // ['email', 'idEstado']
-    const values = Object.values(data); // ['nuevo.email@ejemplo.com', 1]
+    const fields = [];
+    const values = [];
 
-    // 2. Si no hay campos para actualizar, sale de la función
+    if (data.nombre) {
+      fields.push("nombre = ?");
+      values.push(data.nombre);
+    }
+
+    if (data.email) {
+      fields.push("email = ?");
+      values.push(data.email);
+    }
+
+    if (data.contrasena) {
+      fields.push("contrasena = ?");
+      values.push(data.contrasena);
+    }
+
+    if (data.idEstado) {
+      fields.push("idEstado = ?");
+      values.push(data.idEstado);
+    }
+
+    if (data.idRol) {
+      fields.push("idRol = ?");
+      values.push(data.idRol);
+    }
+
     if (fields.length === 0) {
       return false;
     }
 
-    // 3. Construir la parte SET de la consulta dinámicamente:
-    //    Ejemplo: "SET email = ?, idEstado = ?"
-    const setClauses = fields.map((field) => `${field} = ?`).join(", ");
+    const query = `
+      UPDATE usuario
+      SET ${fields.join(", ")}
+      WHERE idUsuario = ?;
+    `;
 
-    // 4. Los valores de la consulta son los valores de los campos + el idUsuario
-    const queryValues = [...values, idUsuario];
+    values.push(idUsuario);
 
-    const [result] = await connection.execute(
-      `UPDATE usuario SET ${setClauses} WHERE idUsuario = ?`,
-      queryValues
-    );
-
+    const [result] = await connection.execute(query, values);
     return result.affectedRows > 0;
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    throw error;
   } finally {
-    await connection.end();
+    await connection.end(); // ✅ Cierra la conexión
   }
 };
-// export const updateUser = async (
-//   idUsuario,
-//   nombre,
-//   email,
-//   contrasena,
-//   idEstado,
-//   idRol
-// ) => {
+
+// export const updateUser = async (idUsuario, data) => {
 //   const connection = await connectMySQL();
 //   try {
+//     // 1. Obtener las claves y valores de los datos que sí llegaron
+//     const fields = Object.keys(data); // ['email', 'idEstado']
+//     const values = Object.values(data); // ['nuevo.email@ejemplo.com', 1]
+
+//     // 2. Si no hay campos para actualizar, sale de la función
+//     if (fields.length === 0) {
+//       return false;
+//     }
+
+//     // 3. Construir la parte SET de la consulta dinámicamente:
+//     //    Ejemplo: "SET email = ?, idEstado = ?"
+//     const setClauses = fields.map((field) => `${field} = ?`).join(", ");
+
+//     // 4. Los valores de la consulta son los valores de los campos + el idUsuario
+//     const queryValues = [...values, idUsuario];
+
 //     const [result] = await connection.execute(
-//       `UPDATE usuario
-//        SET nombre = ?, email = ?, contrasena = ?, idEstado = ?, idRol = ?
-//        WHERE idUsuario = ?`,
-//       [nombre, email, contrasena, idEstado, idRol, idUsuario]
+//       `UPDATE usuario SET ${setClauses} WHERE idUsuario = ?`,
+//       queryValues
 //     );
+
 //     return result.affectedRows > 0;
 //   } finally {
 //     await connection.end();
 //   }
 // };
-
 export const deleteUser = async (idUsuario) => {
   const connection = await connectMySQL();
   try {
