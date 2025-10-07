@@ -1,20 +1,24 @@
-// src/controllers/user.controller.js
+import bcrypt from "bcrypt";
 import * as UserModel from "../models/user.model.js";
 
 // ✅ Obtener usuario por ID
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await UserModel.getUserById(id);
 
-    if (!user) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: "ID de usuario inválido." });
     }
 
-    res.json({ data: user }); // ✅ Envuelve en { data }
+    const user = await UserModel.getUserById(id);
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    return res.status(200).json({ data: user });
   } catch (error) {
     console.error("Error al obtener usuario:", error);
-    res.status(500).json({ error: "Error al obtener usuario" });
+    return res.status(500).json({ error: "Error al obtener usuario." });
   }
 };
 
@@ -22,10 +26,10 @@ export const getUserById = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const users = await UserModel.getAllUsers();
-    res.json({ data: users }); // ✅ Envuelve en { data }
+    return res.status(200).json({ data: users });
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
-    res.status(500).json({ error: "Error al obtener usuarios" });
+    return res.status(500).json({ error: "Error al obtener usuarios." });
   }
 };
 
@@ -33,91 +37,102 @@ export const getAllUsers = async (req, res) => {
 export const getUserByEmail = async (req, res) => {
   try {
     const { email } = req.params;
-    const user = await UserModel.getUserByEmail(email);
 
-    if (!user) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+    if (!email || typeof email !== "string" || email.trim() === "") {
+      return res.status(400).json({ error: "Email inválido." });
     }
 
-    res.json({ data: user }); // ✅ Envuelve en { data }
+    const user = await UserModel.getUserByEmail(email.trim().toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    return res.status(200).json({ data: user });
   } catch (error) {
     console.error("Error al buscar usuario:", error);
-    res.status(500).json({ error: "Error al buscar usuario" });
+    return res.status(500).json({ error: "Error al buscar usuario." });
   }
 };
 
-// ✅ Crear usuario
+// ✅ Crear usuario con contraseña encriptada
 export const createUser = async (req, res) => {
   try {
     const { nombre, email, contrasena, idEstado, idRol } = req.body;
 
+    if (!nombre || !email || !contrasena) {
+      return res.status(400).json({ error: "Faltan campos obligatorios." });
+    }
+
+    const hashedPassword = await bcrypt.hash(contrasena, 10);
+
     const newUser = await UserModel.createUser(
       nombre,
-      email,
-      contrasena,
+      email.toLowerCase(),
+      hashedPassword,
       idEstado,
       idRol
     );
 
-    res.status(201).json({ data: newUser }); // ✅ Envuelve en { data }
+    return res.status(201).json({ data: newUser });
   } catch (error) {
     console.error("Error al crear usuario:", error);
-    res.status(500).json({ error: error.message });
+
+    if (error.code === "ER_DUP_ENTRY") {
+      return res.status(409).json({ error: "El email ya está registrado." });
+    }
+
+    return res.status(500).json({ error: "Error al crear usuario." });
   }
 };
 
-// ✅ Actualizar usuario
+// ✅ Actualizar usuario (encripta contraseña si se envía)
 export const updateUser = async (req, res) => {
   try {
-    const userId = req.params.idUsuario;
+    const { idUsuario } = req.params;
     const data = req.body;
 
-    if (!userId || userId.trim() === "") {
-      return res.status(400).json({
-        error: "Se requiere un ID de usuario válido.",
-      });
-    }
-
-    const userIdNumber = parseInt(userId);
-    if (isNaN(userIdNumber) || userIdNumber <= 0) {
-      return res.status(400).json({
-        error: "El ID debe ser un número positivo.",
-      });
+    if (!idUsuario || isNaN(idUsuario)) {
+      return res.status(400).json({ error: "ID de usuario inválido." });
     }
 
     if (!data || typeof data !== "object") {
-      return res.status(400).json({
-        error: "Datos inválidos. Se requiere un objeto JSON válido.",
-      });
+      return res.status(400).json({ error: "Datos inválidos." });
     }
 
     const filteredData = Object.fromEntries(
       Object.entries(data).filter(
-        ([_, value]) => value !== undefined && value !== null && value !== ""
+        ([, value]) => value !== undefined && value !== null && value !== ""
       )
     );
 
     if (Object.keys(filteredData).length === 0) {
-      return res.status(400).json({
-        error: "Datos insuficientes para actualizar.",
-      });
+      return res
+        .status(400)
+        .json({ error: "Datos insuficientes para actualizar." });
     }
 
-    const success = await UserModel.updateUser(userIdNumber, filteredData);
-
-    if (success) {
-      return res.status(200).json({
-        data: {
-          message: "Usuario actualizado correctamente.",
-          userId: userIdNumber,
-          updatedFields: Object.keys(filteredData),
-        },
-      });
-    } else {
-      return res.status(404).json({
-        error: "Usuario no encontrado o no se realizaron cambios.",
-      });
+    if (filteredData.contrasena) {
+      filteredData.contrasena = await bcrypt.hash(filteredData.contrasena, 10);
     }
+
+    const success = await UserModel.updateUser(
+      parseInt(idUsuario),
+      filteredData
+    );
+
+    if (!success) {
+      return res
+        .status(404)
+        .json({ error: "Usuario no encontrado o sin cambios." });
+    }
+
+    return res.status(200).json({
+      data: {
+        message: "Usuario actualizado correctamente.",
+        userId: parseInt(idUsuario),
+        updatedFields: Object.keys(filteredData),
+      },
+    });
   } catch (error) {
     console.error(
       `Error al actualizar usuario ${req.params.idUsuario}:`,
@@ -125,20 +140,16 @@ export const updateUser = async (req, res) => {
     );
 
     if (error.code === "ER_DUP_ENTRY") {
-      return res.status(409).json({
-        error: "Conflicto de datos: campo duplicado.",
-      });
+      return res.status(409).json({ error: "Campo duplicado." });
     }
 
     if (error.code === "ER_NO_REFERENCED_ROW") {
-      return res.status(400).json({
-        error: "Referencia inválida: datos no existen.",
-      });
+      return res.status(400).json({ error: "Referencia inválida." });
     }
 
-    res.status(500).json({
-      error: "Error interno del servidor al actualizar el usuario.",
-    });
+    return res
+      .status(500)
+      .json({ error: "Error interno al actualizar usuario." });
   }
 };
 
@@ -146,15 +157,63 @@ export const updateUser = async (req, res) => {
 export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await UserModel.deleteUser(id);
 
-    if (!deleted) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ error: "ID de usuario inválido." });
     }
 
-    res.json({ data: { message: "Usuario eliminado correctamente" } }); // ✅ Envuelve en { data }
+    const deleted = await UserModel.deleteUser(parseInt(id));
+
+    if (!deleted) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    return res
+      .status(200)
+      .json({ data: { message: "Usuario eliminado correctamente." } });
   } catch (error) {
     console.error("Error al eliminar usuario:", error);
-    res.status(500).json({ error: "Error al eliminar usuario" });
+    return res
+      .status(500)
+      .json({ error: "Error interno al eliminar usuario." });
+  }
+};
+
+// ✅ Login de usuario (comparar hash)
+export const loginUser = async (req, res) => {
+  try {
+    const { email, contrasena } = req.body;
+
+    if (!email || !contrasena) {
+      return res
+        .status(400)
+        .json({ error: "Email y contraseña son requeridos." });
+    }
+
+    const user = await UserModel.getUserByEmail(email.toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: "Usuario no encontrado." });
+    }
+
+    const isPasswordValid = await bcrypt.compare(contrasena, user.contrasena);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Contraseña incorrecta." });
+    }
+
+    return res.status(200).json({
+      data: {
+        message: "Inicio de sesión exitoso.",
+        user: {
+          idUsuario: user.idUsuario,
+          nombre: user.nombre,
+          email: user.email,
+          idRol: user.idRol,
+          idEstado: user.idEstado,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error en loginUser:", error);
+    return res.status(500).json({ error: "Error interno del servidor." });
   }
 };

@@ -9,17 +9,58 @@ export const createUser = async (
   idRol
 ) => {
   const connection = await connectMySQL();
+
   try {
-    const [result] = await connection.execute(
-      `INSERT INTO usuario (nombre, email, contrasena, idEstado, idRol) 
-       VALUES (?, ?, ?, ?, ?)`,
-      [nombre, email, contrasena, idEstado, idRol]
-    );
-    return { idUsuario: result.insertId, nombre, email, idEstado, idRol };
+    // 🔹 Consulta SQL segura y parametrizada
+    const query = `
+      INSERT INTO usuario (nombre, email, contrasena, idEstado, idRol)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+
+    const [result] = await connection.execute(query, [
+      nombre,
+      email,
+      contrasena, // 🧠 Contraseña ya viene encriptada desde el controlador
+      idEstado,
+      idRol,
+    ]);
+
+    // 🔹 Retorna datos clave del nuevo usuario
+    return {
+      idUsuario: result.insertId,
+      nombre,
+      email,
+      idEstado,
+      idRol,
+    };
+  } catch (error) {
+    console.error("❌ Error al crear usuario:", error);
+    throw new Error("Error al insertar usuario en la base de datos.");
   } finally {
+    // ✅ Garantiza cierre de conexión siempre
     await connection.end();
   }
 };
+
+// export const createUser = async (
+//   nombre,
+//   email,
+//   contrasena,
+//   idEstado,
+//   idRol
+// ) => {
+//   const connection = await connectMySQL();
+//   try {
+//     const [result] = await connection.execute(
+//       `INSERT INTO usuario (nombre, email, contrasena, idEstado, idRol)
+//        VALUES (?, ?, ?, ?, ?)`,
+//       [nombre, email, contrasena, idEstado, idRol]
+//     );
+//     return { idUsuario: result.insertId, nombre, email, idEstado, idRol };
+//   } finally {
+//     await connection.end();
+//   }
+// };
 
 export const getUserById = async (idUsuario) => {
   const connection = await connectMySQL();
