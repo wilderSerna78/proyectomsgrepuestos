@@ -1,6 +1,9 @@
 // src/models/user.model.js
 import { connectMySQL } from "../config/mysql.config.js";
 
+/* ============================================================
+   Crear un usuario nuevo en la base de datos
+   ============================================================ */
 export const createUser = async (
   nombre,
   email,
@@ -40,6 +43,9 @@ export const createUser = async (
 };
 
 
+/* ============================================================
+   Consultar un usuario por su ID
+   ============================================================ */
 export const getUserById = async (idUsuario) => {
   const connection = await connectMySQL();
   try {
@@ -59,6 +65,9 @@ export const getUserById = async (idUsuario) => {
 };
 
 
+/* ============================================================
+   Consultar todos los usuarios
+   ============================================================ */
 export const getAllUsers = async () => {
   const connection = await connectMySQL();
   try {
@@ -76,6 +85,9 @@ export const getAllUsers = async () => {
 };
 
 
+/* ============================================================
+   Consultar un usuario por su correo electrónico
+   ============================================================ */
 export const getUserByEmail = async (email) => {
   const connection = await connectMySQL();
   try {
@@ -95,6 +107,10 @@ export const getUserByEmail = async (email) => {
 };
 
 
+/* ============================================================
+   Actualizar un usuario por su ID
+   (Solo actualiza los campos enviados)
+   ============================================================ */
 export const updateUser = async (idUsuario, data) => {
   const connection = await connectMySQL();
   try {
@@ -126,6 +142,7 @@ export const updateUser = async (idUsuario, data) => {
       values.push(data.idRol);
     }
 
+    // Si no hay campos para actualizar, retornar false
     if (fields.length === 0) return false;
 
     const query = `
@@ -147,6 +164,9 @@ export const updateUser = async (idUsuario, data) => {
 };
 
 
+/* ============================================================
+   Eliminar un usuario por su ID
+   ============================================================ */
 export const deleteUser = async (idUsuario) => {
   const connection = await connectMySQL();
   try {
@@ -167,28 +187,26 @@ export const deleteUser = async (idUsuario) => {
 // export const createUser = async (
 //   nombre,
 //   email,
-//   contrasena,
+//   password,
 //   idEstado,
 //   idRol
 // ) => {
 //   const connection = await connectMySQL();
 
 //   try {
-//     // 🔹 Consulta SQL segura y parametrizada
 //     const query = `
-//       INSERT INTO usuario (nombre, email, contrasena, idEstado, idRol)
+//       INSERT INTO usuario (nombre, email, password, idEstado, idRol)
 //       VALUES (?, ?, ?, ?, ?)
 //     `;
 
 //     const [result] = await connection.execute(query, [
 //       nombre,
 //       email,
-//       contrasena, // 🧠 Contraseña ya viene encriptada desde el controlador
+//       password,
 //       idEstado,
 //       idRol,
 //     ]);
 
-//     // 🔹 Retorna datos clave del nuevo usuario
 //     return {
 //       idUsuario: result.insertId,
 //       nombre,
@@ -200,7 +218,6 @@ export const deleteUser = async (idUsuario) => {
 //     console.error("❌ Error al crear usuario:", error);
 //     throw new Error("Error al insertar usuario en la base de datos.");
 //   } finally {
-//     // ✅ Garantiza cierre de conexión siempre
 //     await connection.end();
 //   }
 // };
@@ -210,7 +227,7 @@ export const deleteUser = async (idUsuario) => {
 //   const connection = await connectMySQL();
 //   try {
 //     const [rows] = await connection.execute(
-//       `SELECT u.idUsuario, u.nombre, u.email, u.contrasena,
+//       `SELECT u.idUsuario, u.nombre, u.email, u.password,
 //               e.nombre AS estado, r.nombreRol AS rol
 //        FROM usuario u
 //        JOIN estado e ON u.idEstado = e.idEstado
@@ -229,7 +246,7 @@ export const deleteUser = async (idUsuario) => {
 //   const connection = await connectMySQL();
 //   try {
 //     const [rows] = await connection.execute(
-//       `SELECT u.idUsuario, u.nombre, u.email, u.contrasena,
+//       `SELECT u.idUsuario, u.nombre, u.email, u.password,
 //               e.nombre AS estado, r.nombreRol AS rol
 //        FROM usuario u
 //        JOIN estado e ON u.idEstado = e.idEstado
@@ -246,7 +263,7 @@ export const deleteUser = async (idUsuario) => {
 //   const connection = await connectMySQL();
 //   try {
 //     const [rows] = await connection.execute(
-//       `SELECT u.idUsuario, u.nombre, u.email, u.contrasena,
+//       `SELECT u.idUsuario, u.nombre, u.email, u.password,
 //               e.nombre AS estado, r.nombreRol AS rol
 //        FROM usuario u
 //        JOIN estado e ON u.idEstado = e.idEstado
@@ -260,8 +277,9 @@ export const deleteUser = async (idUsuario) => {
 //   }
 // };
 
+
 // export const updateUser = async (idUsuario, data) => {
-//   const connection = await connectMySQL(); // ✅ Abre la conexión
+//   const connection = await connectMySQL();
 //   try {
 //     const fields = [];
 //     const values = [];
@@ -276,9 +294,9 @@ export const deleteUser = async (idUsuario) => {
 //       values.push(data.email);
 //     }
 
-//     if (data.contrasena) {
-//       fields.push("contrasena = ?");
-//       values.push(data.contrasena);
+//     if (data.password) {
+//       fields.push("password = ?");
+//       values.push(data.password);
 //     }
 
 //     if (data.idEstado) {
@@ -291,9 +309,7 @@ export const deleteUser = async (idUsuario) => {
 //       values.push(data.idRol);
 //     }
 
-//     if (fields.length === 0) {
-//       return false;
-//     }
+//     if (fields.length === 0) return false;
 
 //     const query = `
 //       UPDATE usuario
@@ -309,7 +325,7 @@ export const deleteUser = async (idUsuario) => {
 //     console.error("Error al actualizar usuario:", error);
 //     throw error;
 //   } finally {
-//     await connection.end(); // ✅ Cierra la conexión
+//     await connection.end();
 //   }
 // };
 

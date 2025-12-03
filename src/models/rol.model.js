@@ -1,144 +1,150 @@
+// --------------------------------------------------------
+// category.model.js — Modelo para la tabla "Categorias"
+// --------------------------------------------------------
+
 import { connectMySQL } from "../config/mysql.config.js";
 
 // --------------------------------------------------------
-// C: CREAR ROL (Create)
+// C: CREAR CATEGORÍA (Create)
 // --------------------------------------------------------
 /**
- * Crea un nuevo rol en la base de datos.
- * @param {string} nombreRol - El nombre del nuevo rol (ej: 'Gerente').
- * @param {string} descripcion - La descripción del rol.
- * @returns {Promise<number>} El ID del rol recién creado (insertId).
+ * Crea una nueva categoría.
+ * @param {string} nombreCategoria - Nombre de la categoría.
+ * @param {string} descripcion - Descripción opcional.
+ * @returns {Promise<number>} ID de la categoría creada.
  */
-export const createRole = async (nombreRol, descripcion) => {
+export const createCategory = async (nombreCategoria, descripcion) => {
   const connection = await connectMySQL();
   try {
     const [result] = await connection.execute(
-      "INSERT INTO rol (nombreRol, descripcion) VALUES (?, ?)",
-      [nombreRol, descripcion]
+      "INSERT INTO Categorias (nombreCategoria, descripcion) VALUES (?, ?)",
+      [nombreCategoria, descripcion]
     );
     return result.insertId;
   } catch (error) {
-    console.error("Error en createRole:", error);
-    throw new Error(
-      "No se pudo crear el rol. Verifique la unicidad del nombre."
-    );
+    console.error("Error en createCategory:", error);
+
+    if (error.code === "ER_DUP_ENTRY") {
+      throw new Error("El nombre de la categoría ya existe.");
+    }
+
+    throw new Error("No se pudo crear la categoría.");
   } finally {
     await connection.end();
   }
 };
 
 // --------------------------------------------------------
-// R: LEER ROLES (Read - Todos y por ID)
+// R: LEER CATEGORÍAS (Read - Todas y por ID)
 // --------------------------------------------------------
 /**
- * Obtiene todos los roles disponibles en la base de datos.
+ * Obtiene todas las categorías.
+ * @returns {Promise<Array>} Lista de categorías.
  */
-export const getAllRoles = async () => {
+export const getAllCategories = async () => {
   const connection = await connectMySQL();
   try {
     const [rows] = await connection.execute(
-      "SELECT idRol, nombreRol, descripcion FROM rol"
+      "SELECT idCategoria, nombreCategoria, descripcion FROM Categorias ORDER BY nombreCategoria"
     );
     return rows;
   } catch (error) {
-    console.error("Error en getAllRoles:", error);
-    throw new Error("No se pudo obtener la lista de roles.");
+    console.error("Error en getAllCategories:", error);
+    throw new Error("No se pudo obtener la lista de categorías.");
   } finally {
     await connection.end();
   }
 };
 
 /**
- * Obtiene un rol específico por su ID.
- * @param {number} idRol - El ID del rol a buscar.
- * @returns {Promise<Object|null>} El objeto rol o null si no se encuentra.
+ * Obtiene una categoría por su ID.
+ * @param {number} idCategoria - ID de la categoría.
+ * @returns {Promise<Object|null>} La categoría o null si no existe.
  */
-export const getRoleById = async (idRol) => {
+export const getCategoryById = async (idCategoria) => {
   const connection = await connectMySQL();
   try {
     const [rows] = await connection.execute(
-      "SELECT idRol, nombreRol, descripcion FROM rol WHERE idRol = ?",
-      [idRol]
+      "SELECT idCategoria, nombreCategoria, descripcion FROM Categorias WHERE idCategoria = ?",
+      [idCategoria]
     );
     return rows[0] || null;
   } catch (error) {
-    console.error(`Error en getRoleById para ID ${idRol}:`, error);
-    throw new Error(`No se pudo obtener el rol con ID ${idRol}.`);
+    console.error(`Error en getCategoryById para ID ${idCategoria}:`, error);
+    throw new Error(`No se pudo obtener la categoría con ID ${idCategoria}.`);
   } finally {
     await connection.end();
   }
 };
 
 // --------------------------------------------------------
-// U: ACTUALIZAR ROL (Update - Actualización dinámica)
+// U: ACTUALIZAR CATEGORÍA (Update)
 // --------------------------------------------------------
 /**
- * Actualiza parcialmente un rol por su ID.
- * Solo actualiza los campos presentes en el objeto 'data'.
- * @param {number} idRol - El ID del rol a actualizar.
- * @param {Object} data - Objeto con los campos a modificar (ej: {nombreRol: 'Nuevo', descripcion: 'D'}).
- * @returns {Promise<boolean>} True si se actualizó al menos una fila, False si no se encontró el rol.
+ * Actualiza parcialmente una categoría.
+ * @param {number} idCategoria - ID de la categoría.
+ * @param {object} data - Campos a actualizar (ej: {nombreCategoria: 'Nuevo'}).
+ * @returns {Promise<boolean>} True si se actualizó, false si no se encontró.
  */
-export const updateRole = async (idRol, data) => {
+export const updateCategory = async (idCategoria, data) => {
   const connection = await connectMySQL();
   try {
     const fields = Object.keys(data);
     const values = Object.values(data);
 
-    // Si no hay datos, retorna false inmediatamente
-    if (fields.length === 0) {
-      return false;
-    }
+    // Si no hay datos que actualizar
+    if (fields.length === 0) return false;
 
-    // Construye la cláusula SET dinámicamente: "nombreRol = ?, descripcion = ?"
-    const setClauses = fields.map((field) => `${field} = ?`).join(", ");
-
-    // Los valores de la consulta son los valores de los campos + el idRol
-    const queryValues = [...values, idRol];
+    const setClause = fields.map((f) => `${f} = ?`).join(", ");
+    const params = [...values, idCategoria];
 
     const [result] = await connection.execute(
-      `UPDATE rol SET ${setClauses} WHERE idRol = ?`,
-      queryValues
+      `UPDATE Categorias SET ${setClause} WHERE idCategoria = ?`,
+      params
     );
 
-    // Retorna true si se afectó al menos una fila
     return result.affectedRows > 0;
   } catch (error) {
-    console.error(`Error en updateRole para ID ${idRol}:`, error);
-    throw new Error(
-      "No se pudo actualizar el rol. Verifique los datos o si existe el ID."
-    );
+    console.error(`Error en updateCategory para ID ${idCategoria}:`, error);
+
+    if (error.code === "ER_DUP_ENTRY") {
+      throw new Error("El nombre de la categoría ya existe.");
+    }
+
+    throw new Error("No se pudo actualizar la categoría.");
   } finally {
     await connection.end();
   }
 };
 
 // --------------------------------------------------------
-// D: ELIMINAR ROL (Delete)
+// D: ELIMINAR CATEGORÍA (Delete)
 // --------------------------------------------------------
 /**
- * Elimina un rol específico por su ID.
- * @param {number} idRol - El ID del rol a eliminar.
- * @returns {Promise<boolean>} True si se eliminó el rol, False si no se encontró.
+ * Elimina una categoría por su ID.
+ * @param {number} idCategoria - ID de la categoría a eliminar.
+ * @returns {Promise<boolean>} True si se eliminó, false si no existía.
  */
-export const deleteRole = async (idRol) => {
+export const deleteCategory = async (idCategoria) => {
   const connection = await connectMySQL();
   try {
     const [result] = await connection.execute(
-      "DELETE FROM rol WHERE idRol = ?",
-      [idRol]
+      "DELETE FROM Categorias WHERE idCategoria = ?",
+      [idCategoria]
     );
-    // Retorna true si se afectó al menos una fila (es decir, si se eliminó)
+
     return result.affectedRows > 0;
   } catch (error) {
-    console.error(`Error en deleteRole para ID ${idRol}:`, error);
-    // Manejo específico si el rol está siendo usado (Foreign Key Constraint)
+    console.error(`Error en deleteCategory para ID ${idCategoria}:`, error);
+
+    // Categoría usada en Productos (FK)
     if (error.code === "ER_ROW_IS_REFERENCED_2") {
       throw new Error(
-        "No se puede eliminar este rol porque está asignado a uno o más usuarios."
+        "No se puede eliminar la categoría porque está asignada a uno o más productos."
       );
     }
-    throw new Error("No se pudo eliminar el rol.");
+
+    throw new Error("No se pudo eliminar la categoría.");
   } finally {
     await connection.end();
   }
