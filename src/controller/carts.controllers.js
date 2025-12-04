@@ -1,5 +1,5 @@
 // src/controller/carts.controllers.js
-import db from "../models/index.js";
+import db from "../models/index.model.js";
 
 const { Carrito, Usuario, ItemsCarrito, Productos } = db;
 
@@ -55,8 +55,8 @@ export const getCartById = async (req, res) => {
           attributes: ["idUsuario", "nombre", "email"],
         },
         {
-          model: ItemsCarrito,       // <-- USAR ItemsCarrito (no ItemsCart)
-          as: "items",               // debe coincidir con Carrito.hasMany(..., as: "items")
+          model: ItemsCarrito, // <-- USAR ItemsCarrito (no ItemsCart)
+          as: "items", // debe coincidir con Carrito.hasMany(..., as: "items")
           include: [
             {
               model: Productos,
@@ -103,7 +103,8 @@ export const addProductToCart = async (req, res) => {
     if (!cart) return res.status(404).json({ error: "Carrito no encontrado." });
 
     const product = await Productos.findByPk(idProducto);
-    if (!product) return res.status(404).json({ error: "Producto no encontrado." });
+    if (!product)
+      return res.status(404).json({ error: "Producto no encontrado." });
 
     if (product.stock < cantidad) {
       return res.status(400).json({

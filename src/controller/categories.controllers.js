@@ -2,7 +2,7 @@
 // categories.controllers.js — Controlador para Categorías
 // --------------------------------------------------------
 
-import db from "../models/index.js"; // Importar todos los modelos desde index
+import db from "../models/index.model.js"; // Importar todos los modelos desde index
 
 const { Categorias } = db; // Extraer el modelo de categorías
 

@@ -1,6 +1,6 @@
 // src/controllers/itemsCart.controllers.js
 
-import db from "../models/index.js";
+import db from "../models/index.model.js";
 
 const { ItemsCarrito, Carrito, Productos } = db;
 
@@ -13,7 +13,9 @@ export const getItemsByCart = async (req, res) => {
 
     if (!ItemsCarrito) {
       console.error("❌ ERROR: ItemsCarrito no está definido en db.");
-      return res.status(500).json({ error: "Error interno: Modelo ItemsCarrito no encontrado" });
+      return res
+        .status(500)
+        .json({ error: "Error interno: Modelo ItemsCarrito no encontrado" });
     }
 
     const cart = await Carrito.findByPk(idCarrito);
@@ -28,7 +30,13 @@ export const getItemsByCart = async (req, res) => {
         {
           model: Productos,
           as: "producto",
-          attributes: ["idProducto", "nombreProducto", "precioVenta", "imagen", "stock"],
+          attributes: [
+            "idProducto",
+            "nombreProducto",
+            "precioVenta",
+            "imagen",
+            "stock",
+          ],
         },
       ],
     });
@@ -38,10 +46,11 @@ export const getItemsByCart = async (req, res) => {
       count: items.length,
       data: items,
     });
-
   } catch (error) {
     console.error("❌ Error en getItemsByCart:", error);
-    return res.status(500).json({ error: "Error al obtener los items del carrito" });
+    return res
+      .status(500)
+      .json({ error: "Error al obtener los items del carrito" });
   }
 };
 
@@ -53,7 +62,9 @@ export const addItemToCart = async (req, res) => {
     const { idCarrito, idProducto, cantidad = 1 } = req.body;
 
     if (!idCarrito || !idProducto) {
-      return res.status(400).json({ error: "idCarrito e idProducto son obligatorios" });
+      return res
+        .status(400)
+        .json({ error: "idCarrito e idProducto son obligatorios" });
     }
 
     if (cantidad <= 0) {
@@ -64,7 +75,8 @@ export const addItemToCart = async (req, res) => {
     if (!cart) return res.status(404).json({ error: "Carrito no encontrado" });
 
     const product = await Productos.findByPk(idProducto);
-    if (!product) return res.status(404).json({ error: "Producto no encontrado" });
+    if (!product)
+      return res.status(404).json({ error: "Producto no encontrado" });
 
     if (product.stock < cantidad) {
       return res.status(400).json({
@@ -115,7 +127,6 @@ export const addItemToCart = async (req, res) => {
       message: "Producto agregado al carrito",
       item: newItem,
     });
-
   } catch (error) {
     console.error("❌ Error en addItemToCart:", error);
     return res.status(500).json({ error: "Error al agregar item al carrito" });
@@ -138,7 +149,8 @@ export const updateItemQuantity = async (req, res) => {
     if (!item) return res.status(404).json({ error: "Item no encontrado" });
 
     const product = await Productos.findByPk(item.idProducto);
-    if (!product) return res.status(404).json({ error: "Producto no encontrado" });
+    if (!product)
+      return res.status(404).json({ error: "Producto no encontrado" });
 
     if (product.stock < cantidad) {
       return res.status(400).json({
@@ -158,7 +170,6 @@ export const updateItemQuantity = async (req, res) => {
       message: "Cantidad actualizada",
       item,
     });
-
   } catch (error) {
     console.error("❌ Error en updateItemQuantity:", error);
     return res.status(500).json({ error: "Error al actualizar item" });
@@ -183,10 +194,11 @@ export const deleteItem = async (req, res) => {
     if (cart) await cart.update({ fechaActualizacion: new Date() });
 
     return res.json({ success: true, message: "Item eliminado" });
-
   } catch (error) {
     console.error("❌ Error en deleteItem:", error);
-    return res.status(500).json({ error: "Error al eliminar item del carrito" });
+    return res
+      .status(500)
+      .json({ error: "Error al eliminar item del carrito" });
   }
 };
 
@@ -209,14 +221,11 @@ export const clearCart = async (req, res) => {
       message: "Carrito vaciado",
       itemsEliminados: deletedCount,
     });
-
   } catch (error) {
     console.error("❌ Error en clearCart:", error);
     return res.status(500).json({ error: "Error al vaciar el carrito" });
   }
 };
-
-
 
 // // src/controllers/itemsCart.controllers.js
 

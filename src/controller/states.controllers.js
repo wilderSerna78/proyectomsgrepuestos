@@ -1,4 +1,4 @@
-import db from "../models/index.js";
+import db from "../models/index.model.js";
 
 const { Estado } = db;
 
@@ -46,7 +46,7 @@ export const createState = async (req, res) => {
 export const getAllStates = async (req, res) => {
   try {
     const states = await Estado.findAll({
-      order: [["nombre", "ASC"]]
+      order: [["nombre", "ASC"]],
     });
     res.status(200).json(states);
   } catch (error) {
@@ -136,9 +136,8 @@ export const updateState = async (req, res) => {
       message: "Estado actualizado correctamente.",
       idEstado: idNumber,
       updatedFields: Object.keys(data),
-      data: state
+      data: state,
     });
-
   } catch (error) {
     console.error(`Error al actualizar estado:`, error);
 
@@ -179,14 +178,13 @@ export const deleteState = async (req, res) => {
     await state.destroy();
 
     res.status(204).send(); // 204 No Content para eliminación exitosa
-
   } catch (error) {
     console.error(`Error al eliminar estado ${req.params.idEstado}:`, error);
 
     // Manejo de error de clave foránea
     if (error.name === "SequelizeForeignKeyConstraintError") {
-      return res.status(409).json({ 
-        error: "No se puede eliminar este estado porque está siendo utilizado." 
+      return res.status(409).json({
+        error: "No se puede eliminar este estado porque está siendo utilizado.",
       });
     }
 

@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import db from "../models/index.js";
+import db from "../models/index.model.js";
 
 const { Usuario, Estado, Rol } = db;
 
@@ -17,15 +17,15 @@ export const getUserById = async (req, res) => {
         {
           model: Estado,
           as: "estado",
-          attributes: ["nombre"]
+          attributes: ["nombre"],
         },
         {
           model: Rol,
           as: "rol",
-          attributes: ["nombreRol"]
-        }
+          attributes: ["nombreRol"],
+        },
       ],
-      attributes: { exclude: ["password"] } // No exponer password
+      attributes: { exclude: ["password"] }, // No exponer password
     });
 
     if (!user) {
@@ -47,16 +47,16 @@ export const getAllUsers = async (req, res) => {
         {
           model: Estado,
           as: "estado",
-          attributes: ["nombre"]
+          attributes: ["nombre"],
         },
         {
           model: Rol,
           as: "rol",
-          attributes: ["nombreRol"]
-        }
+          attributes: ["nombreRol"],
+        },
       ],
       attributes: { exclude: ["password"] }, // No exponer passwords
-      order: [["nombre", "ASC"]]
+      order: [["nombre", "ASC"]],
     });
 
     return res.status(200).json({ data: users });
@@ -81,15 +81,15 @@ export const getUserByEmail = async (req, res) => {
         {
           model: Estado,
           as: "estado",
-          attributes: ["nombre"]
+          attributes: ["nombre"],
         },
         {
           model: Rol,
           as: "rol",
-          attributes: ["nombreRol"]
-        }
+          attributes: ["nombreRol"],
+        },
       ],
-      attributes: { exclude: ["password"] }
+      attributes: { exclude: ["password"] },
     });
 
     if (!user) {
@@ -119,7 +119,7 @@ export const createUser = async (req, res) => {
       email: email.toLowerCase(),
       password: hashedPassword,
       idEstado,
-      idRol
+      idRol,
     });
 
     // Retornar sin password
@@ -186,7 +186,10 @@ export const updateUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(`Error al actualizar usuario ${req.params.idUsuario}:`, error);
+    console.error(
+      `Error al actualizar usuario ${req.params.idUsuario}:`,
+      error
+    );
 
     if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(409).json({ error: "Campo duplicado." });
@@ -196,7 +199,9 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ error: "Referencia inválida." });
     }
 
-    return res.status(500).json({ error: "Error interno al actualizar usuario." });
+    return res
+      .status(500)
+      .json({ error: "Error interno al actualizar usuario." });
   }
 };
 
@@ -222,7 +227,9 @@ export const deleteUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Error al eliminar usuario:", error);
-    return res.status(500).json({ error: "Error interno al eliminar usuario." });
+    return res
+      .status(500)
+      .json({ error: "Error interno al eliminar usuario." });
   }
 };
 
@@ -243,14 +250,14 @@ export const loginUser = async (req, res) => {
         {
           model: Estado,
           as: "estado",
-          attributes: ["nombre"]
+          attributes: ["nombre"],
         },
         {
           model: Rol,
           as: "rol",
-          attributes: ["nombreRol"]
-        }
-      ]
+          attributes: ["nombreRol"],
+        },
+      ],
     });
 
     if (!user) {
@@ -270,7 +277,7 @@ export const loginUser = async (req, res) => {
           nombre: user.nombre,
           email: user.email,
           rol: user.rol,
-          estado: user.estado
+          estado: user.estado,
         },
       },
     });
