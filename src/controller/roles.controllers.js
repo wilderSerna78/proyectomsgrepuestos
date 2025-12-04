@@ -1,4 +1,6 @@
-import * as RolModel from '../models/rol.model.js'; // Asegúrate de que la ruta sea correcta
+import db from "../models/index.js";
+
+const { Rol } = db;
 
 // --------------------------------------------------------
 // 1. CREAR ROL (POST /roles)
@@ -15,18 +17,26 @@ export const createRole = async (req, res) => {
             });
         }
 
-        const newRoleId = await RolModel.createRole(nombreRol, descripcion);
+        const newRole = await Rol.create({ nombreRol, descripcion });
 
         res.status(201).json({ 
             message: "Rol creado exitosamente.", 
-            idRol: newRoleId,
-            nombreRol,
-            descripcion
+            idRol: newRole.idRol,
+            nombreRol: newRole.nombreRol,
+            descripcion: newRole.descripcion
         });
     } catch (error) {
         console.error("Error al crear rol:", error);
-        // El modelo lanza un error genérico, aquí manejamos el 500
-        res.status(500).json({ error: error.message || "Error interno del servidor al crear el rol." });
+
+        if (error.name === "SequelizeUniqueConstraintError") {
+            return res.status(409).json({ 
+                error: "El nombre del rol ya existe." 
+            });
+        }
+
+        res.status(500).json({ 
+            error: error.message || "Error interno del servidor al crear el rol." 
+        });
     }
 };
 
@@ -35,11 +45,15 @@ export const createRole = async (req, res) => {
 // --------------------------------------------------------
 export const getAllRoles = async (req, res) => {
     try {
-        const roles = await RolModel.getAllRoles();
+        const roles = await Rol.findAll({
+            order: [["nombreRol", "ASC"]]
+        });
         res.status(200).json(roles);
     } catch (error) {
         console.error("Error al obtener roles:", error);
-        res.status(500).json({ error: error.message || "Error interno del servidor al obtener los roles." });
+        res.status(500).json({ 
+            error: error.message || "Error interno del servidor al obtener los roles." 
+        });
     }
 };
 
@@ -49,7 +63,13 @@ export const getAllRoles = async (req, res) => {
 export const getRoleById = async (req, res) => {
     try {
         const { idRol } = req.params;
-        const role = await RolModel.getRoleById(idRol);
+
+        const roleIdNumber = parseInt(idRol);
+        if (isNaN(roleIdNumber) || roleIdNumber <= 0) {
+            return res.status(400).json({ error: "ID de rol inválido." });
+        }
+
+        const role = await Rol.findByPk(roleIdNumber);
 
         if (role) {
             res.status(200).json(role);
@@ -58,7 +78,9 @@ export const getRoleById = async (req, res) => {
         }
     } catch (error) {
         console.error(`Error al obtener rol ${req.params.idRol}:`, error);
-        res.status(500).json({ error: error.message || "Error interno del servidor al buscar el rol." });
+        res.status(500).json({ 
+            error: error.message || "Error interno del servidor al buscar el rol." 
+        });
     }
 };
 
@@ -70,31 +92,47 @@ export const updateRole = async (req, res) => {
         const { idRol } = req.params;
         const data = req.body;
 
-        // Usamos la validación simple de ID y datos, similar a la del usuario
         const roleIdNumber = parseInt(idRol);
-        if (isNaN(roleIdNumber) || roleIdNumber <= 0 || Object.keys(data).length === 0) {
+        if (isNaN(roleIdNumber) || roleIdNumber <= 0) {
             return res.status(400).json({ 
-                error: "Petición inválida.", 
-                details: "Se requiere un ID de rol numérico y datos para actualizar." 
+                error: "ID de rol inválido." 
             });
         }
 
-        const success = await RolModel.updateRole(roleIdNumber, data);
-
-        if (success) {
-            res.status(200).json({ message: "Rol actualizado correctamente.", idRol: roleIdNumber });
-        } else {
-            // 404 si el ID no existe o 304 Not Modified si los datos son iguales, 
-            // pero 404 es más claro aquí.
-            res.status(404).json({ error: "Rol no encontrado o no se realizaron cambios." });
+        if (Object.keys(data).length === 0) {
+            return res.status(400).json({ 
+                error: "No se proporcionaron datos para actualizar." 
+            });
         }
+
+        const role = await Rol.findByPk(roleIdNumber);
+
+        if (!role) {
+            return res.status(404).json({ 
+                error: "Rol no encontrado." 
+            });
+        }
+
+        await role.update(data);
+
+        res.status(200).json({ 
+            message: "Rol actualizado correctamente.", 
+            idRol: roleIdNumber,
+            data: role
+        });
+
     } catch (error) {
         console.error(`Error al actualizar rol ${req.params.idRol}:`, error);
-        // Manejo de errores de unicidad/FK (si los hay)
-        if (error.code === 'ER_DUP_ENTRY') {
-             return res.status(409).json({ error: "Conflicto de datos. El nombre del rol ya existe." });
+
+        if (error.name === "SequelizeUniqueConstraintError") {
+            return res.status(409).json({ 
+                error: "Conflicto de datos. El nombre del rol ya existe." 
+            });
         }
-        res.status(500).json({ error: error.message || "Error interno del servidor al actualizar el rol." });
+
+        res.status(500).json({ 
+            error: error.message || "Error interno del servidor al actualizar el rol." 
+        });
     }
 };
 
@@ -107,24 +145,33 @@ export const deleteRole = async (req, res) => {
         const roleIdNumber = parseInt(idRol);
 
         if (isNaN(roleIdNumber) || roleIdNumber <= 0) {
-             return res.status(400).json({ error: "ID de rol inválido." });
+            return res.status(400).json({ error: "ID de rol inválido." });
         }
 
-        const success = await RolModel.deleteRole(roleIdNumber);
+        const role = await Rol.findByPk(roleIdNumber);
 
-        if (success) {
-            res.status(204).send(); // 204 No Content para eliminación exitosa
-        } else {
-            res.status(404).json({ error: `Rol con ID ${idRol} no encontrado.` });
+        if (!role) {
+            return res.status(404).json({ 
+                error: `Rol con ID ${idRol} no encontrado.` 
+            });
         }
+
+        await role.destroy();
+
+        res.status(204).send(); // 204 No Content para eliminación exitosa
+
     } catch (error) {
         console.error(`Error al eliminar rol ${req.params.idRol}:`, error);
         
-        // Manejo de error de clave foránea (si está en uso)
-        if (error.message.includes("asignado a uno o más usuarios")) { 
-             return res.status(409).json({ error: error.message });
+        // Manejo de error de clave foránea
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(409).json({ 
+                error: "No se puede eliminar el rol porque está asignado a uno o más usuarios." 
+            });
         }
         
-        res.status(500).json({ error: error.message || "Error interno del servidor al eliminar el rol." });
+        res.status(500).json({ 
+            error: error.message || "Error interno del servidor al eliminar el rol." 
+        });
     }
 };

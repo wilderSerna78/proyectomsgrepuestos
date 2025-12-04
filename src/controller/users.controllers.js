@@ -1,5 +1,7 @@
 import bcrypt from "bcrypt";
-import * as UserModel from "../models/user.model.js";
+import db from "../models/index.js";
+
+const { Usuario, Estado, Rol } = db;
 
 // Obtener usuario por ID
 export const getUserById = async (req, res) => {
@@ -10,7 +12,22 @@ export const getUserById = async (req, res) => {
       return res.status(400).json({ error: "ID de usuario inválido." });
     }
 
-    const user = await UserModel.getUserById(id);
+    const user = await Usuario.findByPk(id, {
+      include: [
+        {
+          model: Estado,
+          as: "estado",
+          attributes: ["nombre"]
+        },
+        {
+          model: Rol,
+          as: "rol",
+          attributes: ["nombreRol"]
+        }
+      ],
+      attributes: { exclude: ["password"] } // No exponer password
+    });
+
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
@@ -25,7 +42,23 @@ export const getUserById = async (req, res) => {
 // Obtener todos los usuarios
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await UserModel.getAllUsers();
+    const users = await Usuario.findAll({
+      include: [
+        {
+          model: Estado,
+          as: "estado",
+          attributes: ["nombre"]
+        },
+        {
+          model: Rol,
+          as: "rol",
+          attributes: ["nombreRol"]
+        }
+      ],
+      attributes: { exclude: ["password"] }, // No exponer passwords
+      order: [["nombre", "ASC"]]
+    });
+
     return res.status(200).json({ data: users });
   } catch (error) {
     console.error("Error al obtener usuarios:", error);
@@ -42,7 +75,23 @@ export const getUserByEmail = async (req, res) => {
       return res.status(400).json({ error: "Email inválido." });
     }
 
-    const user = await UserModel.getUserByEmail(email.trim().toLowerCase());
+    const user = await Usuario.findOne({
+      where: { email: email.trim().toLowerCase() },
+      include: [
+        {
+          model: Estado,
+          as: "estado",
+          attributes: ["nombre"]
+        },
+        {
+          model: Rol,
+          as: "rol",
+          attributes: ["nombreRol"]
+        }
+      ],
+      attributes: { exclude: ["password"] }
+    });
+
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
@@ -65,19 +114,23 @@ export const createUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await UserModel.createUser(
+    const newUser = await Usuario.create({
       nombre,
-      email.toLowerCase(),
-      hashedPassword,
+      email: email.toLowerCase(),
+      password: hashedPassword,
       idEstado,
       idRol
-    );
+    });
 
-    return res.status(201).json({ data: newUser });
+    // Retornar sin password
+    const userResponse = newUser.toJSON();
+    delete userResponse.password;
+
+    return res.status(201).json({ data: userResponse });
   } catch (error) {
     console.error("Error al crear usuario:", error);
 
-    if (error.code === "ER_DUP_ENTRY") {
+    if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(409).json({ error: "El email ya está registrado." });
     }
 
@@ -115,16 +168,15 @@ export const updateUser = async (req, res) => {
       filteredData.password = await bcrypt.hash(filteredData.password, 10);
     }
 
-    const success = await UserModel.updateUser(
-      parseInt(idUsuario),
-      filteredData
-    );
+    const user = await Usuario.findByPk(parseInt(idUsuario));
 
-    if (!success) {
+    if (!user) {
       return res.status(404).json({
-        error: "Usuario no encontrado o sin cambios.",
+        error: "Usuario no encontrado.",
       });
     }
+
+    await user.update(filteredData);
 
     return res.status(200).json({
       data: {
@@ -136,11 +188,11 @@ export const updateUser = async (req, res) => {
   } catch (error) {
     console.error(`Error al actualizar usuario ${req.params.idUsuario}:`, error);
 
-    if (error.code === "ER_DUP_ENTRY") {
+    if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(409).json({ error: "Campo duplicado." });
     }
 
-    if (error.code === "ER_NO_REFERENCED_ROW") {
+    if (error.name === "SequelizeForeignKeyConstraintError") {
       return res.status(400).json({ error: "Referencia inválida." });
     }
 
@@ -157,11 +209,13 @@ export const deleteUser = async (req, res) => {
       return res.status(400).json({ error: "ID de usuario inválido." });
     }
 
-    const deleted = await UserModel.deleteUser(parseInt(id));
+    const user = await Usuario.findByPk(parseInt(id));
 
-    if (!deleted) {
+    if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
+
+    await user.destroy();
 
     return res.status(200).json({
       data: { message: "Usuario eliminado correctamente." },
@@ -183,7 +237,22 @@ export const loginUser = async (req, res) => {
         .json({ error: "Email y contraseña son requeridos." });
     }
 
-    const user = await UserModel.getUserByEmail(email.toLowerCase());
+    const user = await Usuario.findOne({
+      where: { email: email.toLowerCase() },
+      include: [
+        {
+          model: Estado,
+          as: "estado",
+          attributes: ["nombre"]
+        },
+        {
+          model: Rol,
+          as: "rol",
+          attributes: ["nombreRol"]
+        }
+      ]
+    });
+
     if (!user) {
       return res.status(404).json({ error: "Usuario no encontrado." });
     }
@@ -200,8 +269,8 @@ export const loginUser = async (req, res) => {
           idUsuario: user.idUsuario,
           nombre: user.nombre,
           email: user.email,
-          idRol: user.idRol,
-          idEstado: user.idEstado,
+          rol: user.rol,
+          estado: user.estado
         },
       },
     });
@@ -210,7 +279,6 @@ export const loginUser = async (req, res) => {
     return res.status(500).json({ error: "Error interno del servidor." });
   }
 };
-
 
 // import bcrypt from "bcrypt";
 // import * as UserModel from "../models/user.model.js";

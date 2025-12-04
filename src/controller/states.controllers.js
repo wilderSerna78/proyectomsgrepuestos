@@ -1,4 +1,6 @@
-import * as EstadoModel from "../models/state.model.js"; // Asegúrate de que la ruta sea correcta
+import db from "../models/index.js";
+
+const { Estado } = db;
 
 // --------------------------------------------------------
 // 1. CREAR ESTADO (POST /estados)
@@ -15,17 +17,23 @@ export const createState = async (req, res) => {
       });
     }
 
-    const newId = await EstadoModel.createState(nombre, descripcion);
+    const newState = await Estado.create({ nombre, descripcion });
 
     res.status(201).json({
       message: "Estado creado exitosamente.",
-      idEstado: newId,
-      nombre,
-      descripcion,
+      idEstado: newState.idEstado,
+      nombre: newState.nombre,
+      descripcion: newState.descripcion,
     });
   } catch (error) {
     console.error("Error al crear estado:", error);
-    // El modelo ya lanza un error, aquí lo devolvemos con 500
+
+    if (error.name === "SequelizeUniqueConstraintError") {
+      return res.status(409).json({
+        error: "El nombre del estado ya existe.",
+      });
+    }
+
     res.status(500).json({
       error: error.message || "Error interno del servidor al crear el estado.",
     });
@@ -37,7 +45,9 @@ export const createState = async (req, res) => {
 // --------------------------------------------------------
 export const getAllStates = async (req, res) => {
   try {
-    const states = await EstadoModel.getAllStates();
+    const states = await Estado.findAll({
+      order: [["nombre", "ASC"]]
+    });
     res.status(200).json(states);
   } catch (error) {
     console.error("Error al obtener estados:", error);
@@ -61,7 +71,7 @@ export const getStateById = async (req, res) => {
       return res.status(400).json({ error: "ID de estado inválido." });
     }
 
-    const state = await EstadoModel.getStateById(idNumber);
+    const state = await Estado.findByPk(idNumber);
 
     if (state) {
       res.status(200).json(state);
@@ -111,24 +121,28 @@ export const updateState = async (req, res) => {
       });
     }
 
-    const success = await EstadoModel.updateState(idNumber, data);
+    const state = await Estado.findByPk(idNumber);
 
-    if (success) {
-      res.status(200).json({
-        message: "Estado actualizado correctamente.",
-        idEstado: idNumber,
-        updatedFields: Object.keys(data),
-      });
-    } else {
-      res.status(404).json({
+    if (!state) {
+      return res.status(404).json({
         error: "Estado no encontrado.",
         details: `No se encontró un estado con ID: ${idNumber}`,
       });
     }
+
+    await state.update(data);
+
+    res.status(200).json({
+      message: "Estado actualizado correctamente.",
+      idEstado: idNumber,
+      updatedFields: Object.keys(data),
+      data: state
+    });
+
   } catch (error) {
     console.error(`Error al actualizar estado:`, error);
 
-    if (error.code === "ER_DUP_ENTRY") {
+    if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(409).json({
         error: "El nombre del estado ya existe.",
       });
@@ -154,21 +168,26 @@ export const deleteState = async (req, res) => {
       return res.status(400).json({ error: "ID de estado inválido." });
     }
 
-    const success = await EstadoModel.deleteState(idNumber);
+    const state = await Estado.findByPk(idNumber);
 
-    if (success) {
-      res.status(204).send(); // 204 No Content para eliminación exitosa
-    } else {
-      res
+    if (!state) {
+      return res
         .status(404)
         .json({ error: `Estado con ID ${idEstado} no encontrado.` });
     }
+
+    await state.destroy();
+
+    res.status(204).send(); // 204 No Content para eliminación exitosa
+
   } catch (error) {
     console.error(`Error al eliminar estado ${req.params.idEstado}:`, error);
 
-    // Manejo de error de clave foránea (si el estado está asignado a usuarios o productos)
-    if (error.message.includes("siendo utilizado")) {
-      return res.status(409).json({ error: error.message });
+    // Manejo de error de clave foránea
+    if (error.name === "SequelizeForeignKeyConstraintError") {
+      return res.status(409).json({ 
+        error: "No se puede eliminar este estado porque está siendo utilizado." 
+      });
     }
 
     res.status(500).json({

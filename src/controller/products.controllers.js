@@ -1,5 +1,7 @@
 // --- products.controllers.js ---
-import { Product } from "../models/product.model.js"; 
+import db from "../models/index.js";
+
+const { Productos } = db;
 
 /* ============================================================
    🟩 CONTROLADOR: Crear un nuevo producto
@@ -12,13 +14,14 @@ export const createProductController = async (req, res) => {
     try {
         const productData = req.body;
 
-        // Inserta el producto a través del modelo
-        const result = await Product.createProduct(productData);
+        // Crear producto con Sequelize
+        const newProduct = await Productos.create(productData);
 
         res.status(201).json({
             success: true,
             message: "Producto creado exitosamente.",
-            id: result.idProducto
+            id: newProduct.idProducto,
+            data: newProduct
         });
 
     } catch (error) {
@@ -43,9 +46,30 @@ export const createProductController = async (req, res) => {
    ============================================================ */
 export const getAllProductsController = async (req, res) => {
     try {
-        const filters = req.query;
+        const { nombre, marca, categoriaId } = req.query;
 
-        const products = await Product.getAllProducts(filters);
+        // Construir filtros dinámicos
+        const where = {};
+        if (nombre) where.nombreProducto = { [db.Sequelize.Op.like]: `%${nombre}%` };
+        if (marca) where.marcaRepuesto = { [db.Sequelize.Op.like]: `%${marca}%` };
+        if (categoriaId) where.idCategoria = categoriaId;
+
+        const products = await Productos.findAll({
+            where,
+            include: [
+                {
+                    model: db.Categorias,
+                    as: "categoria",
+                    attributes: ["nombreCategoria"]
+                },
+                {
+                    model: db.Estado,
+                    as: "estado",
+                    attributes: ["nombre"]
+                }
+            ],
+            order: [["nombreProducto", "ASC"]]
+        });
 
         res.status(200).json({
             success: true,
@@ -84,7 +108,20 @@ export const getProductByIdController = async (req, res) => {
             });
         }
         
-        const product = await Product.getProductById(idProducto);
+        const product = await Productos.findByPk(idProducto, {
+            include: [
+                {
+                    model: db.Categorias,
+                    as: "categoria",
+                    attributes: ["nombreCategoria"]
+                },
+                {
+                    model: db.Estado,
+                    as: "estado",
+                    attributes: ["nombre"]
+                }
+            ]
+        });
 
         if (!product) {
             return res.status(404).json({
@@ -128,18 +165,21 @@ export const updateProductController = async (req, res) => {
             });
         }
 
-        const affectedRows = await Product.updateProduct(idProducto, productData);
+        const product = await Productos.findByPk(idProducto);
 
-        if (affectedRows === 0) {
+        if (!product) {
             return res.status(404).json({
                 success: false,
-                message: "Producto no encontrado o no se proporcionaron datos válidos."
+                message: "Producto no encontrado."
             });
         }
 
+        await product.update(productData);
+
         res.status(200).json({
             success: true,
-            message: "Producto actualizado exitosamente."
+            message: "Producto actualizado exitosamente.",
+            data: product
         });
 
     } catch (error) {
@@ -173,14 +213,16 @@ export const deleteProductController = async (req, res) => {
             });
         }
 
-        const affectedRows = await Product.deleteProduct(idProducto);
+        const product = await Productos.findByPk(idProducto);
 
-        if (affectedRows === 0) {
+        if (!product) {
             return res.status(404).json({
                 success: false,
                 message: "Producto no encontrado."
             });
         }
+
+        await product.destroy();
 
         res.status(200).json({
             success: true,
@@ -191,9 +233,14 @@ export const deleteProductController = async (req, res) => {
         console.error("❌ Error al eliminar producto:", error.message);
 
         // Detecta conflicto por llave foránea
-        const statusCode = error.message.includes("referenciado") ? 409 : 500;
+        if (error.name === "SequelizeForeignKeyConstraintError") {
+            return res.status(409).json({
+                success: false,
+                message: "No se pudo eliminar el producto. Está relacionado con otra tabla."
+            });
+        }
 
-        res.status(statusCode).json({
+        res.status(500).json({
             success: false,
             message: "Fallo al eliminar el producto.",
             error: error.message
