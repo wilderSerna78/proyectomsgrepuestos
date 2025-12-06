@@ -1,15 +1,14 @@
-// src/models/itemsCart.model.js
-
+// src/models/orden_items.model.js
 export default (sequelize, DataTypes) => {
-  const ItemsCarrito = sequelize.define(
-    "ItemsCarrito", // ← nombre del modelo en singular
+  const OrdenItem = sequelize.define(
+    "OrdenItem", // nombre del modelo en singular
     {
-      idItemCarrito: {
+      idItem: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
       },
-      idCarrito: {
+      idOrden: {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
@@ -20,50 +19,52 @@ export default (sequelize, DataTypes) => {
       cantidad: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 1,
       },
       precioUnitario: {
         type: DataTypes.DECIMAL(10, 2),
-        allowNull: true,
+        allowNull: false,
+      },
+      subtotal: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
       },
     },
     {
-      tableName: "itemscarrito", // ← nombre real de la tabla
+      tableName: "orden_items", // nombre real de la tabla
       timestamps: false,
     }
   );
 
   // Asociaciones
-  ItemsCarrito.associate = (models) => {
-    // Relación con Carrito
-    ItemsCarrito.belongsTo(models.Carrito, {
-      foreignKey: "idCarrito",
-      as: "carrito",
+  OrdenItem.associate = (models) => {
+    // Relación con Orden
+    OrdenItem.belongsTo(models.Orden, {
+      foreignKey: "idOrden",
+      as: "orden",
     });
 
     // Relación con Producto
-    ItemsCarrito.belongsTo(models.Producto, {
+    OrdenItem.belongsTo(models.Producto, {
       foreignKey: "idProducto",
       as: "producto",
     });
   };
 
-  return ItemsCarrito;
+  return OrdenItem;
 };
 
 
-// // src/models/itemsCart.model.js
-
+// // src/models/orden_items.model.js
 // export default (sequelize, DataTypes) => {
-//   const ItemsCarrito = sequelize.define(
-//     "ItemsCarrito",
+//   const OrdenItems = sequelize.define(
+//     "OrdenItems", // nombre del modelo en Sequelize
 //     {
-//       idItemCarrito: {
+//       idItem: {
 //         type: DataTypes.INTEGER,
 //         primaryKey: true,
 //         autoIncrement: true,
 //       },
-//       idCarrito: {
+//       idOrden: {
 //         type: DataTypes.INTEGER,
 //         allowNull: false,
 //       },
@@ -78,31 +79,35 @@ export default (sequelize, DataTypes) => {
 //       },
 //       precioUnitario: {
 //         type: DataTypes.DECIMAL(10, 2),
-//         allowNull: true,
+//         allowNull: false,
+//         defaultValue: 0.00,
+//       },
+//       subtotal: {
+//         type: DataTypes.DECIMAL(10, 2),
+//         allowNull: false,
+//         defaultValue: 0.00,
 //       },
 //     },
 //     {
-//       tableName: "itemscarrito", // nombre exacto de la tabla en tu BD
+//       tableName: "orden_items", // nombre exacto de la tabla en tu BD
 //       timestamps: false,
-//       freezeTableName: true,
 //     }
 //   );
 
 //   // Asociaciones
-//   ItemsCarrito.associate = (models) => {
-//     // Relación con Carrito
-//     ItemsCarrito.belongsTo(models.Carrito, {
-//       foreignKey: "idCarrito",
-//       as: "carrito",
+//   OrdenItems.associate = (models) => {
+//     // Relación con Orden
+//     OrdenItems.belongsTo(models.Ordenes, {
+//       foreignKey: "idOrden",
+//       as: "orden",
 //     });
 
-//     // Relación con Producto (singular, consistente con index.model.js)
-//     ItemsCarrito.belongsTo(models.Producto, {
+//     // Relación con Producto
+//     OrdenItems.belongsTo(models.Producto, {
 //       foreignKey: "idProducto",
 //       as: "producto",
 //     });
 //   };
 
-//   return ItemsCarrito;
+//   return OrdenItems;
 // };
-

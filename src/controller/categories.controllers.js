@@ -4,21 +4,16 @@
 
 import db from "../models/index.model.js"; // Importar todos los modelos desde index
 
-const { Categorias } = db; // Extraer el modelo de categorías
+// Usa el nombre correcto en singular
+const { Categoria } = db;
 
 // --------------------------------------------------------
 // C: CREAR CATEGORÍA
 // --------------------------------------------------------
-/**
- * Crea una nueva categoría.
- * @route POST /api/v1/categories
- * @access Private/Admin
- */
 export const createCategoryController = async (req, res) => {
   try {
     const { nombreCategoria, descripcion } = req.body;
 
-    // Validación simple
     if (!nombreCategoria) {
       return res.status(400).json({
         success: false,
@@ -26,8 +21,7 @@ export const createCategoryController = async (req, res) => {
       });
     }
 
-    // Crear categoría con Sequelize
-    const newCategory = await Categorias.create({
+    const newCategory = await Categoria.create({
       nombreCategoria,
       descripcion,
     });
@@ -39,7 +33,7 @@ export const createCategoryController = async (req, res) => {
       data: newCategory,
     });
   } catch (error) {
-    console.error("Error en createCategoryController:", error.message);
+    console.error("❌ Error en createCategoryController:", error.message);
 
     if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(409).json({
@@ -59,14 +53,9 @@ export const createCategoryController = async (req, res) => {
 // --------------------------------------------------------
 // R: OBTENER TODAS LAS CATEGORÍAS
 // --------------------------------------------------------
-/**
- * Obtiene todas las categorías registradas.
- * @route GET /api/v1/categories
- * @access Public
- */
 export const getAllCategoriesController = async (req, res) => {
   try {
-    const categories = await Categorias.findAll({
+    const categories = await Categoria.findAll({
       order: [["nombreCategoria", "ASC"]],
     });
 
@@ -76,7 +65,7 @@ export const getAllCategoriesController = async (req, res) => {
       data: categories,
     });
   } catch (error) {
-    console.error("Error en getAllCategoriesController:", error.message);
+    console.error("❌ Error en getAllCategoriesController:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -89,11 +78,6 @@ export const getAllCategoriesController = async (req, res) => {
 // --------------------------------------------------------
 // R: OBTENER CATEGORÍA POR ID
 // --------------------------------------------------------
-/**
- * Obtiene una categoría específica usando su ID.
- * @route GET /api/v1/categories/:id
- * @access Public
- */
 export const getCategoryByIdController = async (req, res) => {
   try {
     const idCategoria = Number(req.params.id);
@@ -105,7 +89,7 @@ export const getCategoryByIdController = async (req, res) => {
       });
     }
 
-    const category = await Categorias.findByPk(idCategoria);
+    const category = await Categoria.findByPk(idCategoria);
 
     if (!category) {
       return res.status(404).json({
@@ -119,7 +103,7 @@ export const getCategoryByIdController = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    console.error("Error en getCategoryByIdController:", error.message);
+    console.error("❌ Error en getCategoryByIdController:", error.message);
 
     return res.status(500).json({
       success: false,
@@ -132,11 +116,6 @@ export const getCategoryByIdController = async (req, res) => {
 // --------------------------------------------------------
 // U: ACTUALIZAR CATEGORÍA
 // --------------------------------------------------------
-/**
- * Actualiza parcialmente una categoría.
- * @route PUT /api/v1/categories/:id
- * @access Private/Admin
- */
 export const updateCategoryController = async (req, res) => {
   try {
     const idCategoria = Number(req.params.id);
@@ -156,7 +135,7 @@ export const updateCategoryController = async (req, res) => {
       });
     }
 
-    const category = await Categorias.findByPk(idCategoria);
+    const category = await Categoria.findByPk(idCategoria);
 
     if (!category) {
       return res.status(404).json({
@@ -173,7 +152,7 @@ export const updateCategoryController = async (req, res) => {
       data: category,
     });
   } catch (error) {
-    console.error("Error en updateCategoryController:", error.message);
+    console.error("❌ Error en updateCategoryController:", error.message);
 
     if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(409).json({
@@ -193,11 +172,6 @@ export const updateCategoryController = async (req, res) => {
 // --------------------------------------------------------
 // D: ELIMINAR CATEGORÍA
 // --------------------------------------------------------
-/**
- * Elimina una categoría por su ID.
- * @route DELETE /api/v1/categories/:id
- * @access Private/Admin
- */
 export const deleteCategoryController = async (req, res) => {
   try {
     const idCategoria = Number(req.params.id);
@@ -209,7 +183,7 @@ export const deleteCategoryController = async (req, res) => {
       });
     }
 
-    const category = await Categorias.findByPk(idCategoria);
+    const category = await Categoria.findByPk(idCategoria);
 
     if (!category) {
       return res.status(404).json({
@@ -225,7 +199,7 @@ export const deleteCategoryController = async (req, res) => {
       message: "Categoría eliminada exitosamente.",
     });
   } catch (error) {
-    console.error("Error en deleteCategoryController:", error.message);
+    console.error("❌ Error en deleteCategoryController:", error.message);
 
     if (error.name === "SequelizeForeignKeyConstraintError") {
       return res.status(409).json({
@@ -242,3 +216,248 @@ export const deleteCategoryController = async (req, res) => {
     });
   }
 };
+
+// // --------------------------------------------------------
+// // categories.controllers.js — Controlador para Categorías
+// // --------------------------------------------------------
+
+// import db from "../models/index.model.js"; // Importar todos los modelos desde index
+
+// const { Categorias } = db; // Extraer el modelo de categorías
+
+// // --------------------------------------------------------
+// // C: CREAR CATEGORÍA
+// // --------------------------------------------------------
+// /**
+//  * Crea una nueva categoría.
+//  * @route POST /api/v1/categories
+//  * @access Private/Admin
+//  */
+// export const createCategoryController = async (req, res) => {
+//   try {
+//     const { nombreCategoria, descripcion } = req.body;
+
+//     // Validación simple
+//     if (!nombreCategoria) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "El nombre de la categoría es obligatorio.",
+//       });
+//     }
+
+//     // Crear categoría con Sequelize
+//     const newCategory = await Categorias.create({
+//       nombreCategoria,
+//       descripcion,
+//     });
+
+//     return res.status(201).json({
+//       success: true,
+//       message: "Categoría creada exitosamente.",
+//       idCategoria: newCategory.idCategoria,
+//       data: newCategory,
+//     });
+//   } catch (error) {
+//     console.error("Error en createCategoryController:", error.message);
+
+//     if (error.name === "SequelizeUniqueConstraintError") {
+//       return res.status(409).json({
+//         success: false,
+//         message: "El nombre de la categoría ya existe.",
+//       });
+//     }
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Fallo al crear la categoría.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// // --------------------------------------------------------
+// // R: OBTENER TODAS LAS CATEGORÍAS
+// // --------------------------------------------------------
+// /**
+//  * Obtiene todas las categorías registradas.
+//  * @route GET /api/v1/categories
+//  * @access Public
+//  */
+// export const getAllCategoriesController = async (req, res) => {
+//   try {
+//     const categories = await Categorias.findAll({
+//       order: [["nombreCategoria", "ASC"]],
+//     });
+
+//     return res.status(200).json({
+//       success: true,
+//       count: categories.length,
+//       data: categories,
+//     });
+//   } catch (error) {
+//     console.error("Error en getAllCategoriesController:", error.message);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Fallo al obtener categorías.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// // --------------------------------------------------------
+// // R: OBTENER CATEGORÍA POR ID
+// // --------------------------------------------------------
+// /**
+//  * Obtiene una categoría específica usando su ID.
+//  * @route GET /api/v1/categories/:id
+//  * @access Public
+//  */
+// export const getCategoryByIdController = async (req, res) => {
+//   try {
+//     const idCategoria = Number(req.params.id);
+
+//     if (isNaN(idCategoria)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "ID de categoría inválido.",
+//       });
+//     }
+
+//     const category = await Categorias.findByPk(idCategoria);
+
+//     if (!category) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Categoría no encontrada.",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       data: category,
+//     });
+//   } catch (error) {
+//     console.error("Error en getCategoryByIdController:", error.message);
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Fallo al obtener la categoría.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// // --------------------------------------------------------
+// // U: ACTUALIZAR CATEGORÍA
+// // --------------------------------------------------------
+// /**
+//  * Actualiza parcialmente una categoría.
+//  * @route PUT /api/v1/categories/:id
+//  * @access Private/Admin
+//  */
+// export const updateCategoryController = async (req, res) => {
+//   try {
+//     const idCategoria = Number(req.params.id);
+//     const data = req.body;
+
+//     if (isNaN(idCategoria)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "ID de categoría inválido.",
+//       });
+//     }
+
+//     if (Object.keys(data).length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "No se proporcionaron datos para actualizar.",
+//       });
+//     }
+
+//     const category = await Categorias.findByPk(idCategoria);
+
+//     if (!category) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Categoría no encontrada.",
+//       });
+//     }
+
+//     await category.update(data);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Categoría actualizada exitosamente.",
+//       data: category,
+//     });
+//   } catch (error) {
+//     console.error("Error en updateCategoryController:", error.message);
+
+//     if (error.name === "SequelizeUniqueConstraintError") {
+//       return res.status(409).json({
+//         success: false,
+//         message: "El nombre de la categoría ya existe.",
+//       });
+//     }
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Fallo al actualizar la categoría.",
+//       error: error.message,
+//     });
+//   }
+// };
+
+// // --------------------------------------------------------
+// // D: ELIMINAR CATEGORÍA
+// // --------------------------------------------------------
+// /**
+//  * Elimina una categoría por su ID.
+//  * @route DELETE /api/v1/categories/:id
+//  * @access Private/Admin
+//  */
+// export const deleteCategoryController = async (req, res) => {
+//   try {
+//     const idCategoria = Number(req.params.id);
+
+//     if (isNaN(idCategoria)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "ID de categoría inválido.",
+//       });
+//     }
+
+//     const category = await Categorias.findByPk(idCategoria);
+
+//     if (!category) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Categoría no encontrada.",
+//       });
+//     }
+
+//     await category.destroy();
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Categoría eliminada exitosamente.",
+//     });
+//   } catch (error) {
+//     console.error("Error en deleteCategoryController:", error.message);
+
+//     if (error.name === "SequelizeForeignKeyConstraintError") {
+//       return res.status(409).json({
+//         success: false,
+//         message:
+//           "No se puede eliminar la categoría porque está asignada a uno o más productos.",
+//       });
+//     }
+
+//     return res.status(500).json({
+//       success: false,
+//       message: "Fallo al eliminar la categoría.",
+//       error: error.message,
+//     });
+//   }
+// };
