@@ -2,12 +2,12 @@
 
 import express from "express";
 import {
-  getItemsByCart,
-  addItemToCart,
-  updateItemQuantity,
-  deleteItem,
-  clearCart,
-} from "../controller/itemsCart.controllers.js";
+  getItemsByCart,
+  addItemToCart,
+  updateItemQuantity,
+  deleteItem,
+  clearCart,
+} from "../controllers/itemsCart.controllers.js";
 
 const router = express.Router();
 
@@ -45,7 +45,6 @@ router.delete("/cart/:idCarrito", clearCart);
 export default router;
 
 // // src/routes/itemsCart.routes.js
-
 
 // import express from "express";
 // import {

@@ -1,11 +1,11 @@
-import express from 'express';
-import { 
-    createRole,
-    getAllRoles,
-    getRoleById,
-    updateRole,
-    deleteRole
-} from '../controller/roles.controllers.js'; 
+import express from "express";
+import {
+  createRole,
+  getAllRoles,
+  getRoleById,
+  updateRole,
+  deleteRole,
+} from "../controllers/roles.controllers.js";
 
 const router = express.Router();
 
@@ -13,32 +13,32 @@ const router = express.Router();
 // RUTAS PRINCIPALES: /api/roles
 // =======================================================
 
-router.post('/', createRole);
-router.get('/', getAllRoles);
+router.post("/", createRole);
+router.get("/", getAllRoles);
 
 // =======================================================
 // RUTAS ESPECÍFICAS POR ID: /api/roles/:idRol
 // =======================================================
 
-router.get('/:idRol', getRoleById);
+router.get("/:idRol", getRoleById);
 
 // ✅ SOLUCIÓN: Cambiar a PUT o agregar ambos métodos
-router.put('/:idRol', updateRole);        // Para PUT
-router.patch('/:idRol', updateRole);      // Para PATCH (opcional)
+router.put("/:idRol", updateRole); // Para PUT
+router.patch("/:idRol", updateRole); // Para PATCH (opcional)
 
-router.delete('/:idRol', deleteRole);
+router.delete("/:idRol", deleteRole);
 
 export default router;
 
 // import express from 'express';
 // // ⚠️ Asegúrate que la ruta al controlador sea correcta
-// import { 
+// import {
 //     createRole,
 //     getAllRoles,
 //     getRoleById,
 //     updateRole,
 //     deleteRole
-// } from '../controller/roles.controllers.js'; 
+// } from '../controller/roles.controllers.js';
 
 // const router = express.Router();
 
@@ -53,7 +53,6 @@ export default router;
 // // GET /api/roles
 // // Obtiene todos los roles.
 // router.get('/', getAllRoles);
-
 
 // // =======================================================
 // // RUTAS ESPECÍFICAS POR ID: /api/roles/:idRol
@@ -70,6 +69,5 @@ export default router;
 // // DELETE /api/roles/:idRol
 // // Elimina un rol por su ID.
 // router.delete('/:idRol', deleteRole);
-
 
 // export default router;

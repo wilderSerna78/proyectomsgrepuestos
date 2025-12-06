@@ -8,7 +8,7 @@ import {
   // getAllOrders,
   // updateOrder,
   // deleteOrder,
-} from "../controller/order.controllers.js";
+} from "../controllers/order.controllers.js";
 
 const router = Router();
 
@@ -33,7 +33,6 @@ router.get("/user/:idUsuario", getOrdersByUser);
 // router.delete("/:id", deleteOrder);
 
 export default router;
-
 
 // // src/routes/orders.routes.js
 // import { Router } from "express";

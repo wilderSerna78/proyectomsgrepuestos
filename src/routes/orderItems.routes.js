@@ -5,7 +5,7 @@ import {
   getItemsByOrder,
   updateItemInOrder,
   deleteItemFromOrder,
-} from "../controller/orderItems.controllers.js";
+} from "../controllers/orderItems.controllers.js";
 
 const router = Router();
 

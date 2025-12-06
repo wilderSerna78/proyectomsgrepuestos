@@ -1,12 +1,12 @@
 import express from "express";
 
-import { 
-    createState,
-    getAllStates,
-    getStateById,
-    updateState,
-    deleteState
-} from '../controller/states.controllers.js'; 
+import {
+  createState,
+  getAllStates,
+  getStateById,
+  updateState,
+  deleteState,
+} from "../controllers/states.controllers.js";
 
 const router = express.Router();
 
@@ -16,12 +16,11 @@ const router = express.Router();
 
 // POST /api/estados
 // Crea un nuevo estado.
-router.post('/', createState);
+router.post("/", createState);
 
 // GET /api/estados
 // Obtiene todos los estados.
-router.get('/', getAllStates);
-
+router.get("/", getAllStates);
 
 // =======================================================
 // RUTAS ESPECÍFICAS POR ID: /api/estados/:idEstado
@@ -29,15 +28,14 @@ router.get('/', getAllStates);
 
 // GET /api/estados/:idEstado
 // Obtiene un estado por su ID.
-router.get('/:idEstado', getStateById);
+router.get("/:idEstado", getStateById);
 
 // PATCH /api/estados/:idEstado
 // Actualiza un estado parcialmente.
-router.put('/:idEstado', updateState);
+router.put("/:idEstado", updateState);
 
 // DELETE /api/estados/:idEstado
 // Elimina un estado por su ID.
-router.delete('/:idEstado', deleteState);
-
+router.delete("/:idEstado", deleteState);
 
 export default router;
