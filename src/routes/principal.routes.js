@@ -13,7 +13,7 @@ import productsRoutes from "./products.routes.js";
 
 const router = Router();
 
-router.use("/auth", authRoutes);
+router.use("/api/auth", authRoutes);
 router.use("/api/carts", cartsRoutes);
 router.use("/api/categories", categoriesRoutes);
 router.use("/api/items-cart", itemsCartRoutes);
