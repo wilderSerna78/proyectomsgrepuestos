@@ -1,119 +1,118 @@
 // src/routes/orders.routes.js
-import express from 'express';
+import express from "express";
 import {
-  checkout,
-  createOrder,
-  getAllOrders,
-  getOrderById,
-  getOrdersByUser,
-  updateOrder,
-  deleteOrder
-} from '../controllers/order.controllers.js';
+  checkout,
+  createOrder,
+  getAllOrders,
+  getOrderById,
+  getOrdersByUser,
+  updateOrder,
+  deleteOrder,
+} from "../controllers/order.controllers.js";
 
-// Importar middleware de autenticación (ya existente)
-import { authMiddleware } from '../middlewares/auth.middleware.js';
-
-// Importar middleware de roles (Nuevo)
-import { isGestion, isGestionOrCliente } from '../middlewares/role.middleware.js'; // 👈 RUTA CORRECTA
+import { authMiddleware } from "../middlewares/auth.middleware.js";
+import {
+  isGestion,
+  isGestionOrCliente,
+} from "../middlewares/role.middleware.js";
 
 const router = express.Router();
 
-// ============================================================================
-// Rutas de Checkout (Solo clientes)
-// ============================================================================
+// Checkout
+router.post("/checkout", authMiddleware, isGestionOrCliente, checkout);
 
-/**
- * POST /api/orders/checkout
- * Procesar el checkout y crear una orden desde el carrito
- * Requiere autenticación
- */
-// Nota: La función checkout ya tiene la lógica de rol, pero es buena práctica proteger la ruta.
-router.post('/checkout', authMiddleware, checkout); 
+// CRUD de Órdenes
+router.post("/", authMiddleware, isGestionOrCliente, createOrder);
 
-// ============================================================================
-// Rutas de Órdenes (CRUD)
-// ============================================================================
+router.get("/", authMiddleware, isGestion, getAllOrders);
 
-/**
- * POST /api/orders
- * Crear una orden manualmente (Solo Gestión/Admin)
- */
-router.post('/', authMiddleware, isGestion, createOrder);
+router.get("/:id", authMiddleware, getOrderById);
 
-/**
- * GET /api/orders
- * Obtener todas las órdenes (Solo Gestión/Admin)
- */
-router.get('/', authMiddleware, isGestion, getAllOrders);
+router.get("/my-orders", authMiddleware, getOrdersByUser);
 
-/**
- * GET /api/orders/:id
- * Obtener una orden específica por ID. 
- * El controlador getOrderById contiene la lógica para permitir al Cliente ver solo SU orden.
- */
-router.get('/:id', authMiddleware, getOrderById);
+router.put("/:id", authMiddleware, isGestion, updateOrder);
 
-/**
- * GET /api/orders/user/:idUsuario
- * Obtener todas las órdenes de un usuario. 
- * El controlador getOrdersByUser siempre usa el ID del TOKEN, no el del URL, por seguridad.
- */
-// Nota: La ruta debe ser accedida por todos los autenticados, pero el controlador restringe la búsqueda a req.user.idUsuario.
-// Cambiamos la ruta para que no espere un parámetro, haciendo que la llamada sea GET /api/orders/my-orders
-router.get('/my-orders', authMiddleware, getOrdersByUser);
-
-
-/**
- * PUT /api/orders/:id
- * Actualizar una orden (Solo Gestión/Admin)
- */
-router.put('/:id', authMiddleware, isGestion, updateOrder);
-
-/**
- * DELETE /api/orders/:id
- * Eliminar una orden (Solo Gestión/Admin)
- */
-router.delete('/:id', authMiddleware, isGestion, deleteOrder);
+router.delete("/:id", authMiddleware, isGestion, deleteOrder);
 
 export default router;
 
 
 
 // // src/routes/orders.routes.js
-// import { Router } from "express";
+// import express from "express";
 // import {
+//   checkout,
 //   createOrder,
+//   getAllOrders,
 //   getOrderById,
 //   getOrdersByUser,
-//   getAllOrders,
 //   updateOrder,
 //   deleteOrder,
 // } from "../controllers/order.controllers.js";
 
-// const router = Router();
+// import { authMiddleware } from "../middlewares/auth.middleware.js";
+// // ⚠️ Nota: isGestionOrCliente ahora será usado para permitir a los clientes crear órdenes
+// import {
+//   isGestion,
+//   isGestionOrCliente,
+// } from "../middlewares/role.middleware.js";
 
-// /* ============================================================
-//    📌 RUTAS PARA ÓRDENES
-//    ------------------------------------------------------------
-//    Base: /api/orders
-//    ============================================================ */
+// const router = express.Router();
 
-// // Crear una nueva orden
-// router.post("/", createOrder);
+// // ============================================================================
+// // Rutas de Checkout (DEPRECADA, usar POST /api/orders)
+// // ============================================================================
 
-// // Obtener todas las órdenes
-// router.get("/", getAllOrders);
+// /**
+//  * POST /api/orders/checkout
+//  * Procesar el checkout y crear una orden desde el carrito.
+//  * Se recomienda usar POST /api/orders si se unifica la lógica.
+//  */
+// // Se mantiene por si es usada, pero protegida correctamente:
+// router.post("/checkout", authMiddleware, isGestionOrCliente, checkout);
 
-// // Obtener todas las órdenes de un usuario (ruta más específica primero)
-// router.get("/user/:idUsuario", getOrdersByUser);
+// // ============================================================================
+// // Rutas de Órdenes (CRUD)
+// // ============================================================================
 
-// // Obtener una orden por ID
-// router.get("/:id", getOrderById);
+// /**
+//  * POST /api/orders
+//  * Crear una orden (Esta debe ser accesible por Clientes para finalizar su compra)
+//  */
+// // 🔑 CORRECCIÓN CLAVE: Usamos isGestionOrCliente para que el Cliente pueda crear la orden.
+// router.post("/", authMiddleware, isGestionOrCliente, createOrder);
 
-// // Actualizar una orden (ej: estado)
-// router.put("/:id", updateOrder);
+// /**
+//  * GET /api/orders
+//  * Obtener todas las órdenes (Solo Gestión/Admin)
+//  */
+// router.get("/", authMiddleware, isGestion, getAllOrders);
 
-// // Eliminar una orden
-// router.delete("/:id", deleteOrder);
+// /**
+//  * GET /api/orders/:id
+//  * Obtener una orden específica por ID.
+//  * El controlador getOrderById debe contener la lógica para permitir al Cliente ver solo SU orden.
+//  * El acceso se permite a todos los autenticados para que el controlador valide el ID.
+//  */
+// router.get("/:id", authMiddleware, getOrderById);
+
+// /**
+//  * GET /api/orders/my-orders
+//  * Obtener todas las órdenes del usuario autenticado (usando el ID del TOKEN).
+//  */
+// router.get("/my-orders", authMiddleware, getOrdersByUser);
+
+// /**
+//  * PUT /api/orders/:id
+//  * Actualizar una orden (Solo Gestión/Admin)
+//  */
+// router.put("/:id", authMiddleware, isGestion, updateOrder);
+
+// /**
+//  * DELETE /api/orders/:id
+//  * Eliminar una orden (Solo Gestión/Admin)
+//  */
+// router.delete("/:id", authMiddleware, isGestion, deleteOrder);
 
 // export default router;
+

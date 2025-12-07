@@ -1,22 +1,27 @@
 import express from "express";
 import {
-  createCart,
+  createCart, // 💡 NUEVA IMPORTACIÓN
+  getAllCarts,
   getCartById,
   addProductToCart,
   deleteItemFromCart,
   emptyCart,
-} from "../controllers/carts.controllers.js";
+} from "../controllers/carts.controllers.js"; // Asegúrate de que getAllCarts esté exportado en este archivo
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
 /* ============================================================
-   📌 RUTAS PARA CARRITO
-   Base: /api/carts
-   ============================================================ */
+   📌 RUTAS PARA CARRITO
+   Base: /api/carts
+   ============================================================ */
 
 // Crear un nuevo carrito (solo autenticado)
 router.post("/", authMiddleware, createCart);
+
+// 💡 NUEVA RUTA: Obtener TODOS los carritos (Ideal para administradores)
+// NOTA: Esta debe ir ANTES de la ruta con :id
+router.get("/", authMiddleware, getAllCarts);
 
 // Obtener carrito por ID (solo autenticado)
 router.get("/:id", authMiddleware, getCartById);
@@ -32,8 +37,6 @@ router.delete("/empty/:idCarrito", authMiddleware, emptyCart);
 
 export default router;
 
-
-
 // import express from "express";
 // import {
 //   createCart,
@@ -42,22 +45,28 @@ export default router;
 //   deleteItemFromCart,
 //   emptyCart,
 // } from "../controllers/carts.controllers.js";
+// import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 // const router = express.Router();
 
-// // Crear carrito
-// router.post("/", createCart);
+// /* ============================================================
+//    📌 RUTAS PARA CARRITO
+//    Base: /api/carts
+//    ============================================================ */
 
-// // Obtener carrito por ID
-// router.get("/:id", getCartById);
+// // Crear un nuevo carrito (solo autenticado)
+// router.post("/", authMiddleware, createCart);
 
-// // Agregar producto al carrito
-// router.post("/add-product", addProductToCart);
+// // Obtener carrito por ID (solo autenticado)
+// router.get("/:id", authMiddleware, getCartById);
 
-// // Eliminar producto por idItemCarrito
-// router.delete("/item/:idItemCarrito", deleteItemFromCart);
+// // Agregar producto al carrito (solo autenticado)
+// router.post("/add", authMiddleware, addProductToCart);
 
-// // Vaciar el carrito completo
-// router.delete("/empty/:idCarrito", emptyCart);
+// // Eliminar producto específico del carrito (por idItemCarrito)
+// router.delete("/item/:idItemCarrito", authMiddleware, deleteItemFromCart);
+
+// // Vaciar carrito completo (por idCarrito)
+// router.delete("/empty/:idCarrito", authMiddleware, emptyCart);
 
 // export default router;
