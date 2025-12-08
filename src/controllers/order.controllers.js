@@ -151,7 +151,7 @@ export const createOrder = async (req, res) => {
   const { idUsuario, items: productos } = req.body || {};
 
   // Logs básicos para depuración
-  console.log("🟢 Body recibido:", req.body);
+  // console.log("🟢 Body recibido:", req.body);
 
   if (!idUsuario) {
     return res
