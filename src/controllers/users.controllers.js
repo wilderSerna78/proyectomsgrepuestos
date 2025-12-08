@@ -25,7 +25,7 @@ export const getUserById = async (req, res) => {
           attributes: ["nombreRol"],
         },
       ],
-      attributes: { exclude: ["password"] }, // No exponer password
+      attributes: { exclude: ["password"] }, 
     });
 
     if (!user) {
@@ -55,7 +55,7 @@ export const getAllUsers = async (req, res) => {
           attributes: ["nombreRol"],
         },
       ],
-      attributes: { exclude: ["password"] }, // No exponer passwords
+      attributes: { exclude: ["password"] },
       order: [["nombre", "ASC"]],
     });
 
@@ -118,11 +118,10 @@ export const createUser = async (req, res) => {
       nombre,
       email: email.toLowerCase(),
       password: hashedPassword,
-      idEstado,
-      idRol,
+      idEstado: idEstado ?? 1,  
+      idRol: idRol ?? 4,         
     });
 
-    // Retornar sin password
     const userResponse = newUser.toJSON();
     delete userResponse.password;
 
@@ -137,6 +136,7 @@ export const createUser = async (req, res) => {
     return res.status(500).json({ error: "Error al crear usuario." });
   }
 };
+
 
 // Actualizar usuario (encripta password si se envía)
 export const updateUser = async (req, res) => {
